@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的海岛日记 | Island Diary</title>
+<style>
+  :root {
+    --paper: #f7f3ec;
+    --ink: #20201d;
+    --muted: #706b61;
+    --line: rgba(32, 32, 29, 0.12);
+    --sea: #0b6f86;
+    --leaf: #46715b;
+    --coral: #c85f46;
+    --sun: #e6a548;
+    --white: #ffffff;
+    --shadow: 0 18px 48px rgba(16, 35, 43, 0.12);
+    --radius: 8px;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    color: var(--ink);
+    background: var(--paper);
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    line-height: 1.65;
+  }
+
+  a { color: inherit; }
+  button { font: inherit; }
+
+  .hero {
+    min-height: 92vh;
+    display: grid;
+    align-items: end;
+    position: relative;
+    overflow: hidden;
+    color: var(--white);
+    background:
+      linear-gradient(180deg, rgba(8, 25, 32, 0.18), rgba(8, 25, 32, 0.72)),
+      url("https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=2200&q=85") center/cover;
+  }
+
+  .hero::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0;
+    height: 16vh;
+    background: linear-gradient(180deg, transparent, var(--paper));
+    pointer-events: none;
+  }
+
+  .topbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 30;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(21, 38, 42, 0.28);
+    backdrop-filter: blur(16px);
+    color: var(--white);
+  }
+
+  .topbar.is-scrolled {
+    color: var(--ink);
+    background: rgba(247, 243, 236, 0.88);
+    border-bottom-color: var(--line);
+  }
+
+  .nav {
+    max-width: 1180px;
+    margin: 0 auto;
+    min-height: 58px;
+    padding: 0 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+  }
+
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    letter-spacing: 0;
+    white-space: nowrap;
+  }
+
+  .brand-mark {
+    width: 28px;
+    height: 28px;
+    border: 1px solid currentColor;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+  }
+
+  .brand-mark svg,
+  .icon svg {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    font-size: 14px;
+  }
+
+  .nav-links a {
+    text-decoration: none;
+    opacity: 0.82;
+  }
+
+  .nav-links a:hover { opacity: 1; }
+
+  .hero-inner {
+    width: min(1180px, calc(100% - 44px));
+    margin: 0 auto;
+    padding: 130px 0 16vh;
+    position: relative;
+    z-index: 2;
+  }
+
+  .kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 18px;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.82);
+  }
+
+  .kicker::before {
+    content: "";
+    width: 44px;
+    height: 1px;
+    background: currentColor;
+  }
+
+  h1 {
+    margin: 0;
+    max-width: 820px;
+    font-size: clamp(48px, 8.4vw, 118px);
+    line-height: 0.96;
+    letter-spacing: 0;
+  }
+
+  .hero-copy {
+    max-width: 560px;
+    margin: 24px 0 0;
+    color: rgba(255, 255, 255, 0.86);
+    font-size: clamp(16px, 2vw, 20px);
+  }
+
+  .hero-actions {
+    margin-top: 34px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .btn {
+    min-height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.42);
+    border-radius: var(--radius);
+    color: var(--white);
+    background: rgba(255, 255, 255, 0.12);
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .btn.primary {
+    color: #18343b;
+    background: var(--white);
+    border-color: var(--white);
+  }
+
+  .hero-meta {
+    position: absolute;
+    right: 0;
+    bottom: 16vh;
+    width: min(315px, 30vw);
+    border-left: 1px solid rgba(255, 255, 255, 0.28);
+    padding-left: 22px;
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 14px;
+  }
+
+  .hero-meta strong {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--white);
+    font-size: 18px;
+  }
+
+  main { position: relative; z-index: 1; }
+  section { padding: 86px 22px; }
+  .wrap { width: min(1180px, 100%); margin: 0 auto; }
+
+  .section-head {
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(280px, 0.6fr);
+    gap: 38px;
+    align-items: end;
+    margin-bottom: 34px;
+  }
+
+  .eyebrow {
+    margin: 0 0 10px;
+    color: var(--sea);
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  h2 {
+    margin: 0;
+    font-size: clamp(30px, 4vw, 56px);
+    line-height: 1.08;
+    letter-spacing: 0;
+  }
+
+  .section-head p,
+  .about-text p,
+  .note p,
+  .spot p {
+    margin: 0;
+    color: var(--muted);
+  }
+
+  .about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.1fr;
+    gap: 18px;
+    align-items: stretch;
+  }
+
+  .portrait {
+    min-height: 540px;
+    border-radius: var(--radius);
+    background:
+      linear-gradient(180deg, rgba(10, 48, 56, 0.06), rgba(10, 48, 56, 0.3)),
+      url("https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1400&q=82") center/cover;
+    box-shadow: var(--shadow);
+  }
+
+  .about-panel {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: clamp(24px, 4vw, 46px);
+    background: rgba(255, 255, 255, 0.5);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 34px;
+  }
+
+  .about-text {
+    display: grid;
+    gap: 16px;
+    font-size: 16px;
+  }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .stat {
+    border-top: 1px solid var(--line);
+    padding-top: 14px;
+  }
+
+  .stat strong {
+    display: block;
+    font-size: 28px;
+    line-height: 1;
+  }
+
+  .stat span {
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .gallery {
+    background: var(--white);
+  }
+
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 22px;
+  }
+
+  .filter {
+    min-height: 36px;
+    padding: 8px 13px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+  }
+
+  .filter.active {
+    color: var(--white);
+    background: var(--ink);
+    border-color: var(--ink);
+  }
+
+  .photo-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 14px;
+  }
+
+  .photo {
+    grid-column: span 4;
+    min-height: 310px;
+    border: 0;
+    border-radius: var(--radius);
+    padding: 0;
+    overflow: hidden;
+    position: relative;
+    cursor: zoom-in;
+    background: #d8d5ca;
+  }
+
+  .photo.wide { grid-column: span 8; }
+  .photo.tall { min-height: 460px; }
+
+  .photo img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    transition: transform 0.6s ease;
+  }
+
+  .photo:hover img { transform: scale(1.045); }
+
+  .photo figcaption {
+    position: absolute;
+    inset: auto 0 0;
+    padding: 60px 18px 18px;
+    color: var(--white);
+    text-align: left;
+    background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.7));
+  }
+
+  .photo-title {
+    display: block;
+    font-weight: 700;
+    font-size: 18px;
+  }
+
+  .photo-meta {
+    display: block;
+    margin-top: 4px;
+    font-size: 13px;
+    opacity: 0.78;
+  }
+
+  .journal-layout {
+    display: grid;
+    grid-template-columns: 0.85fr 1.15fr;
+    gap: 28px;
+    align-items: start;
+  }
+
+  .map-card {
+    position: sticky;
+    top: 84px;
+    border-radius: var(--radius);
+    overflow: hidden;
+    min-height: 520px;
+    color: var(--white);
+    background:
+      linear-gradient(180deg, rgba(15, 37, 41, 0.1), rgba(15, 37, 41, 0.76)),
+      url("https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?auto=format&fit=crop&w=1200&q=82") center/cover;
+    box-shadow: var(--shadow);
+  }
+
+  .map-card-content {
+    position: absolute;
+    inset: auto 0 0;
+    padding: 28px;
+  }
+
+  .map-card h3 {
+    margin: 0 0 10px;
+    font-size: 30px;
+  }
+
+  .map-card p {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  .pin {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--sun);
+    box-shadow: 0 0 0 8px rgba(230, 165, 72, 0.22);
+  }
+
+  .pin:nth-child(1) { left: 58%; top: 24%; }
+  .pin:nth-child(2) { left: 36%; top: 42%; background: var(--coral); box-shadow: 0 0 0 8px rgba(200, 95, 70, 0.22); }
+  .pin:nth-child(3) { left: 68%; top: 56%; background: #5fb7c6; box-shadow: 0 0 0 8px rgba(95, 183, 198, 0.22); }
+
+  .notes {
+    display: grid;
+    gap: 14px;
+  }
+
+  .note {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 22px;
+    background: rgba(255, 255, 255, 0.56);
+  }
+
+  .note time {
+    display: block;
+    color: var(--sea);
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .note h3 {
+    margin: 0 0 8px;
+    font-size: 22px;
+  }
+
+  .spots {
+    background: #edf4f1;
+  }
+
+  .spot-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+
+  .spot {
+    border-radius: var(--radius);
+    padding: 22px;
+    background: var(--white);
+    border: 1px solid rgba(70, 113, 91, 0.16);
+  }
+
+  .spot .icon {
+    width: 36px;
+    height: 36px;
+    margin-bottom: 18px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    color: var(--leaf);
+    background: rgba(70, 113, 91, 0.12);
+  }
+
+  .spot h3 {
+    margin: 0 0 8px;
+    font-size: 20px;
+  }
+
+  .contact {
+    min-height: 64vh;
+    display: grid;
+    place-items: center;
+    text-align: center;
+    color: var(--white);
+    background:
+      linear-gradient(180deg, rgba(19, 36, 39, 0.25), rgba(19, 36, 39, 0.78)),
+      url("https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=2000&q=84") center/cover;
+  }
+
+  .contact .wrap {
+    max-width: 760px;
+  }
+
+  .contact p {
+    margin: 18px auto 0;
+    color: rgba(255, 255, 255, 0.82);
+    max-width: 600px;
+  }
+
+  .contact-links {
+    margin-top: 28px;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .contact-links a {
+    min-height: 40px;
+    padding: 9px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: var(--radius);
+    text-decoration: none;
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  footer {
+    padding: 26px 22px;
+    color: var(--muted);
+    font-size: 13px;
+    background: var(--paper);
+  }
+
+  footer .wrap {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    display: none;
+    place-items: center;
+    padding: 22px;
+    background: rgba(14, 20, 21, 0.88);
+    backdrop-filter: blur(12px);
+  }
+
+  .lightbox.active { display: grid; }
+
+  .lightbox-panel {
+    width: min(1040px, 100%);
+    max-height: 90vh;
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    overflow: hidden;
+    border-radius: var(--radius);
+    background: var(--white);
+  }
+
+  .lightbox img {
+    width: 100%;
+    height: min(78vh, 720px);
+    object-fit: cover;
+    background: #d8d5ca;
+  }
+
+  .lightbox-info {
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 22px;
+  }
+
+  .lightbox-info h3 {
+    margin: 0 0 8px;
+    font-size: 24px;
+  }
+
+  .lightbox-info p {
+    margin: 0;
+    color: var(--muted);
+  }
+
+  .close {
+    width: 38px;
+    height: 38px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.65s ease, transform 0.65s ease;
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  @media (max-width: 900px) {
+    .hero-meta {
+      position: static;
+      width: auto;
+      margin-top: 34px;
+      border-left: 0;
+      padding-left: 0;
+      max-width: 520px;
+    }
+
+    .section-head,
+    .about-grid,
+    .journal-layout,
+    .spot-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .portrait { min-height: 360px; }
+    .map-card { position: relative; top: 0; min-height: 420px; }
+    .photo,
+    .photo.wide { grid-column: span 6; }
+    .lightbox-panel { grid-template-columns: 1fr; }
+    .lightbox img { height: 58vh; }
+  }
+
+  @media (max-width: 640px) {
+    .nav { min-height: 54px; padding: 0 14px; }
+    .nav-links { gap: 12px; font-size: 13px; }
+    .nav-links a:nth-child(2) { display: none; }
+    .hero-inner { width: calc(100% - 28px); padding-bottom: 12vh; }
+    section { padding: 62px 14px; }
+    .stats { grid-template-columns: 1fr; }
+    .photo,
+    .photo.wide { grid-column: span 12; min-height: 330px; }
+    .photo.tall { min-height: 390px; }
+    footer .wrap { display: block; }
+  }
+</style>
+</head>
+<body>
+  <header class="topbar" id="topbar">
+    <nav class="nav" aria-label="主导航">
+      <a class="brand" href="#top" aria-label="返回顶部">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M4 15c3-3 6-3 9 0s6 3 7 1"/><path d="M12 3v12"/><path d="M8 7c2-3 6-3 8 0"/></svg>
+        </span>
+        <span>我的海岛日记</span>
+      </a>
+      <div class="nav-links">
+        <a href="#story">故事</a>
+        <a href="#gallery">相册</a>
+        <a href="#journal">日记</a>
+        <a href="#contact">联系</a>
+      </div>
+    </nav>
+  </header>
+
+  <section class="hero" id="top" aria-label="海岛日记首屏">
+    <div class="hero-inner">
+      <p class="kicker">Codex 实战 · Vibecoding Personal Site</p>
+      <h1>我的海岛日记</h1>
+      <p class="hero-copy">从刷到灵感，到搭建页面、调整交互、打磨视觉和文案：把一段海岛生活整理成可以被打开、被浏览、被继续生长的个人网站。</p>
+      <div class="hero-actions">
+        <a class="btn primary" href="#gallery">
+          <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 15-5-5L5 19"/></svg></span>
+          看相册
+        </a>
+        <a class="btn" href="#journal">
+          <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19.5V5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-1.5Z"/><path d="M8 7h6M8 11h7"/></svg></span>
+          读日记
+        </a>
+      </div>
+      <aside class="hero-meta">
+        <strong>09/29 · 19:00</strong>
+        一次关于个人网站、独立站和 AI 协作的练习。页面把摄影、地点、文字和轻交互放在一起，适合持续更新。
+      </aside>
+    </div>
+  </section>
+
+  <main>
+    <section id="story">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <div>
+            <p class="eyebrow">Story</p>
+            <h2>把生活里的海风，整理成一页网页。</h2>
+          </div>
+          <p>这个项目复刻的是视频里的创作方向：一个由 Codex 辅助完成的海岛主题个人站。它不是营销首页，而是一个可浏览的摄影日记，有首屏、有相册、有路线和文字记录。</p>
+        </div>
+
+        <div class="about-grid">
+          <div class="portrait reveal" role="img" aria-label="海边公路与日落"></div>
+          <div class="about-panel reveal">
+            <div class="about-text">
+              <p><strong>你好，我在海岛上记录日常。</strong></p>
+              <p>清晨去码头看渔船靠岸，午后在椰林下修图，傍晚追着海岸线找一块新的日落机位。每次出门都像在写一篇没有标题的日记。</p>
+              <p>网站用轻量的 HTML、CSS 和 JavaScript 搭建，交互集中在相册筛选、图片灯箱、滚动显隐和导航状态上。单文件即可打开，也方便后续迁移到独立站。</p>
+            </div>
+            <div class="stats" aria-label="项目数据">
+              <div class="stat"><strong>12</strong><span>张精选照片</span></div>
+              <div class="stat"><strong>6</strong><span>篇日记片段</span></div>
+              <div class="stat"><strong>1</strong><span>个 Codex 页面</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="gallery" id="gallery">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <div>
+            <p class="eyebrow">Gallery</p>
+            <h2>海面、椰林、渔港和一场慢下来的旅行。</h2>
+          </div>
+          <p>点击图片可以打开灯箱。筛选按钮用于模拟个人站里常见的作品分类，后续可以接入真实照片目录或 CMS。</p>
+        </div>
+        <div class="filters reveal" aria-label="相册筛选">
+          <button class="filter active" type="button" data-filter="all">全部</button>
+          <button class="filter" type="button" data-filter="sea">海面</button>
+          <button class="filter" type="button" data-filter="village">岛民</button>
+          <button class="filter" type="button" data-filter="sunset">日落</button>
+        </div>
+        <div class="photo-grid" id="photoGrid"></div>
+      </div>
+    </section>
+
+    <section id="journal">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <div>
+            <p class="eyebrow">Journal</p>
+            <h2>路线不是重点，留下来的瞬间才是。</h2>
+          </div>
+          <p>日记部分用卡片保留文字阅读节奏，左侧用海岛地图感图片承载地点记忆，让页面更像个人作品集而不是普通博客列表。</p>
+        </div>
+
+        <div class="journal-layout">
+          <aside class="map-card reveal" aria-label="海岛路线">
+            <span class="pin"></span>
+            <span class="pin"></span>
+            <span class="pin"></span>
+            <div class="map-card-content">
+              <h3>Island Route</h3>
+              <p>北岸灯塔、旧渔港、南湾沙滩。每一个点位都对应一组照片和一段生活切片。</p>
+            </div>
+          </aside>
+          <div class="notes" id="notes"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="spots">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <div>
+            <p class="eyebrow">Moments</p>
+            <h2>页面里保留了三个可继续扩展的内容入口。</h2>
+          </div>
+          <p>这些模块可以替换成真实旅行攻略、拍摄参数、路线地图、店铺推荐，或者后续独立站的商品与订阅入口。</p>
+        </div>
+        <div class="spot-grid">
+          <article class="spot reveal">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21s7-5.1 7-11a7 7 0 1 0-14 0c0 5.9 7 11 7 11Z"/><circle cx="12" cy="10" r="2"/></svg></span>
+            <h3>机位收藏</h3>
+            <p>适合拍日出的海堤、适合拍蓝调的码头、适合拍星空的山顶平台。</p>
+          </article>
+          <article class="spot reveal">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/></svg></span>
+            <h3>天气笔记</h3>
+            <p>记录潮汐、风向、云层和季节，帮助下一次出门之前判断光线。</p>
+          </article>
+          <article class="spot reveal">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19V5a2 2 0 0 1 2-2h9l5 5v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg></span>
+            <h3>创作档案</h3>
+            <p>把从灵感、Prompt、初稿到最终页面的过程沉淀下来，方便复盘。</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="contact" id="contact">
+      <div class="wrap reveal">
+        <p class="eyebrow" style="color: rgba(255,255,255,.72)">Contact</p>
+        <h2>岛屿信号有时断断续续，但总能找到我。</h2>
+        <p>如果你也想把一段旅行、一组摄影作品或一个独立站想法做成页面，可以从这个单文件继续改。</p>
+        <div class="contact-links">
+          <a href="mailto:hello@island-diary.com">hello@island-diary.com</a>
+          <a href="#gallery">摄影作品</a>
+          <a href="#story">Codex 实战</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span>© 2026 我的海岛日记</span>
+      <span>Built with Codex · HTML/CSS/JavaScript</span>
+    </div>
+  </footer>
+
+  <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="照片预览">
+    <div class="lightbox-panel">
+      <img id="lightboxImage" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" alt="">
+      <div class="lightbox-info">
+        <div>
+          <h3 id="lightboxTitle"></h3>
+          <p id="lightboxMeta"></p>
+        </div>
+        <button class="close" type="button" id="closeLightbox" aria-label="关闭预览">×</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const photos = [
+    {
+      title: "北岸晨光",
+      meta: "石梅湾 · 06:18 · 海面",
+      tag: "sea",
+      size: "wide",
+      src: "https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=1400&q=82"
+    },
+    {
+      title: "旧渔港",
+      meta: "码头 · 17:42 · 岛民",
+      tag: "village",
+      size: "tall",
+      src: "https://images.unsplash.com/photo-1534766555764-ce878a5e3a2b?auto=format&fit=crop&w=1000&q=82"
+    },
+    {
+      title: "椰林公路",
+      meta: "环岛路 · 15:20 · 岛民",
+      tag: "village",
+      size: "",
+      src: "https://images.unsplash.com/photo-1526772662000-3f88f10405ff?auto=format&fit=crop&w=1000&q=82"
+    },
+    {
+      title: "潮汐之后",
+      meta: "南湾 · 08:03 · 海面",
+      tag: "sea",
+      size: "",
+      src: "https://images.unsplash.com/photo-1520483601560-389dff434fdf?auto=format&fit=crop&w=1000&q=82"
+    },
+    {
+      title: "日落归航",
+      meta: "西港 · 18:35 · 日落",
+      tag: "sunset",
+      size: "wide",
+      src: "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1400&q=82"
+    },
+    {
+      title: "蓝调时刻",
+      meta: "灯塔 · 19:06 · 日落",
+      tag: "sunset",
+      size: "",
+      src: "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1000&q=82"
+    },
+    {
+      title: "浅滩纹理",
+      meta: "珊瑚湾 · 11:12 · 海面",
+      tag: "sea",
+      size: "tall",
+      src: "https://images.unsplash.com/photo-1506929562872-bb421503ef21?auto=format&fit=crop&w=1000&q=82"
+    },
+    {
+      title: "山顶风声",
+      meta: "观景台 · 16:48 · 岛民",
+      tag: "village",
+      size: "",
+      src: "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1000&q=82"
+    }
+  ];
+
+  const entries = [
+    ["2026.09.29", "把视频里的灵感落到页面上", "晚上七点，终于把海岛日记整理成一个完整网页。先做首屏的照片情绪，再补相册、日记和联系区域。Codex 负责执行，我负责判断每一步像不像自己。"],
+    ["2026.08.17", "暴雨前的码头", "下午三点的云压得很低，渔船提前回港。水手们在棚下喝茶，雨点敲上铁皮屋顶之后，整个码头像被调成了黑白电影。"],
+    ["2026.07.04", "山顶看见银河", "骑车上山的时候路灯越来越少。关掉车灯，海岸线只剩一点点亮，银河从头顶一直铺到远处。那一刻很适合按下快门，也适合什么都不做。"],
+    ["2026.05.21", "椰林里的午后", "太阳最烈的时候不适合赶路。找一家临海小店坐下，修几张早上拍的照片，等风从门口穿过去。慢慢地，页面的颜色也有了方向。"],
+    ["2026.03.09", "第一张满意的日出", "五点半出门，六点十八分海面变亮。第一束光落在浪尖上的时候，我知道这组照片可以成为网站的开头。"],
+    ["2026.01.02", "给独立站留一个入口", "个人网站不只是一张名片。它可以是作品集、旅行日记、摄影档案，也可以慢慢长成一个真正的独立站。"]
+  ];
+
+  const grid = document.getElementById("photoGrid");
+  const lightbox = document.getElementById("lightbox");
+  const lightboxImage = document.getElementById("lightboxImage");
+  const lightboxTitle = document.getElementById("lightboxTitle");
+  const lightboxMeta = document.getElementById("lightboxMeta");
+
+  function renderPhotos(filter = "all") {
+    grid.innerHTML = "";
+    photos
+      .filter((photo) => filter === "all" || photo.tag === filter)
+      .forEach((photo) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `photo ${photo.size}`;
+        button.dataset.tag = photo.tag;
+        button.innerHTML = `
+          <img src="${photo.src}" alt="${photo.title}" loading="lazy">
+          <figcaption>
+            <span class="photo-title">${photo.title}</span>
+            <span class="photo-meta">${photo.meta}</span>
+          </figcaption>
+        `;
+        button.addEventListener("click", () => openLightbox(photo));
+        grid.appendChild(button);
+      });
+  }
+
+  function openLightbox(photo) {
+    lightboxImage.src = photo.src;
+    lightboxImage.alt = photo.title;
+    lightboxTitle.textContent = photo.title;
+    lightboxMeta.textContent = photo.meta;
+    lightbox.classList.add("active");
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeLightbox() {
+    lightbox.classList.remove("active");
+    document.body.style.overflow = "";
+  }
+
+  document.getElementById("closeLightbox").addEventListener("click", closeLightbox);
+  lightbox.addEventListener("click", (event) => {
+    if (event.target === lightbox) closeLightbox();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closeLightbox();
+  });
+
+  document.querySelectorAll(".filter").forEach((button) => {
+    button.addEventListener("click", () => {
+      document.querySelectorAll(".filter").forEach((item) => item.classList.remove("active"));
+      button.classList.add("active");
+      renderPhotos(button.dataset.filter);
+    });
+  });
+
+  const notes = document.getElementById("notes");
+  entries.forEach(([date, title, text]) => {
+    const article = document.createElement("article");
+    article.className = "note reveal";
+    article.innerHTML = `<time>${date}</time><h3>${title}</h3><p>${text}</p>`;
+    notes.appendChild(article);
+  });
+
+  const topbar = document.getElementById("topbar");
+  const revealObserver = new IntersectionObserver((items) => {
+    items.forEach((item) => {
+      if (item.isIntersecting) {
+        item.target.classList.add("visible");
+        revealObserver.unobserve(item.target);
+      }
+    });
+  }, { threshold: 0.14 });
+
+  document.querySelectorAll(".reveal").forEach((item) => revealObserver.observe(item));
+  renderPhotos();
+
+  window.addEventListener("scroll", () => {
+    topbar.classList.toggle("is-scrolled", window.scrollY > 80);
+  }, { passive: true });
+</script>
+</body>
+</html>
